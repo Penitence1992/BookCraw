@@ -7,8 +7,12 @@ import org.jsoup.select.Elements;
 import org.junit.Assert;
 import org.junit.Test;
 import org.penitence.craw.config.PropertiesUtil;
+import org.penitence.craw.event.HitTargetListener;
+import org.penitence.craw.uitl.CustomClassLoader;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -39,40 +43,16 @@ public class PropertiesUtilTest {
     }
 
     @Test
-    public void testTmp(){
-        List<Integer> list = Arrays.asList(1,2,3,4,5,6,7,8,9,10);
-        int groupCount = 3;
-        int excessCount = 1;
-        for (int i = 0 ; i < 3; i ++){
-            int startIndex = i * groupCount;
-            int endIndex = (i + 1) * groupCount;
-            if( i == (3 - 1)){
-                endIndex += excessCount;
-            }
-            for (int a : list.subList(startIndex,endIndex )){
-                System.out.print(a + " " );
-            }
-        }
+    public void testTmp() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class<?> tClass = Class.forName("org.penitence.craw.event.impl.HigTarget");
+        Constructor<?> constructor = tClass.getConstructor(String.class);
+        HitTargetListener listener = (HitTargetListener) constructor.newInstance("aaa");
+        Assert.assertNotNull(listener);
     }
 
     @Test
-    public void testContentCraw() throws IOException {
-        Document document = Jsoup.connect("http://www.luoqiu.com//read/42067/36431639.html").get();
-        Elements elements = document.select("div[id=content][name=content]");
-        //System.out.println(document);
-        for (Element element : elements) System.out.println(element.text());
+    public void testCustomClassLoader() throws ClassNotFoundException {
+        Class<?> tClass = Class.forName("a.b.c.abc",true, new CustomClassLoader("D:\\abc.class",null));
     }
 
-    @Test
-    public void testGetTitle(){
-        String tmp = "****asdas<>?:adasd\"//\\asd**?asd:asdad|".replaceAll("[\\\\/*?:\"<>|]*","");
-        System.out.println(tmp);
-    }
-
-    @Test
-    public void testQueue(){
-        ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>(Arrays.asList(1,2,3,4,5,6,7,8,9,10,11,12));
-        System.out.println(queue.poll());
-        System.out.println(queue.poll());
-    }
 }

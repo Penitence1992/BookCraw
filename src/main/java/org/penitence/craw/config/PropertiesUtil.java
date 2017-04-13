@@ -1,6 +1,5 @@
 package org.penitence.craw.config;
 
-import com.sun.xml.internal.ws.api.ResourceLoader;
 import org.jsoup.helper.StringUtil;
 
 import java.io.IOException;
