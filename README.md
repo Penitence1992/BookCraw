@@ -1,7 +1,7 @@
-# BookCraw
+﻿# BookCraw
 > 小说爬虫
 
-##参数说明
+## 参数说明
 
 - savePath
 > 爬取到的文件保存路径
@@ -23,6 +23,9 @@
 
 - crawClass
 > 使用哪个类进行爬取
+
+- titleSelectQ=div[class=bookname] > h1
+- textSelectQ=div[id=content][name=content]
 
 ## 如果使用外部类 则使用下面参数
 

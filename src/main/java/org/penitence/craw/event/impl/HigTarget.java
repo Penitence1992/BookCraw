@@ -16,11 +16,15 @@ import java.io.IOException;
 public class HigTarget implements HitTargetListener {
     private final String SPLIT_STRING = " ";
     private String saveDir;
+    private String titleSelectQ = "";
+    private String textSelectQ = "";
     private RegexUtil regexUtil;
 
-    public HigTarget(String saveDir) {
+    public HigTarget(String saveDir, String titleSelectQ, String textSelectQ) {
         this.saveDir = saveDir;
-        regexUtil = new RegexUtil("[1-9]\\d*");
+        regexUtil = new RegexUtil("[0-9个十百千一二三四五六七八九]+");
+        this.titleSelectQ = titleSelectQ;
+        this.textSelectQ = textSelectQ;
     }
 
     @Override
@@ -29,7 +33,7 @@ public class HigTarget implements HitTargetListener {
         try {
             document = Jsoup.connect(url).get();
             String title = getTitle(document);
-            Elements elements = document.select("div[id=content][name=content]");
+            Elements elements = document.select(textSelectQ);
             if(elements.size() == 0)return;
             String innerText = elements.get(0).text();
             String[] rows = innerText.split(SPLIT_STRING);
@@ -40,7 +44,7 @@ public class HigTarget implements HitTargetListener {
     }
 
     private String getTitle(Document document){
-        Elements elements = document.select("h1[class=bname_content]");
+        Elements elements = document.select(titleSelectQ);
         if(elements.size() == 0)return null;
         Element element = elements.get(0);
         return element.text();

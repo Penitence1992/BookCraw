@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.penitence.craw.config.PropertiesUtil;
 import org.penitence.craw.event.HitTargetListener;
 import org.penitence.craw.uitl.CustomClassLoader;
+import org.penitence.craw.uitl.RegexUtil;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -45,14 +46,25 @@ public class PropertiesUtilTest {
     @Test
     public void testTmp() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Class<?> tClass = Class.forName("org.penitence.craw.event.impl.HigTarget");
-        Constructor<?> constructor = tClass.getConstructor(String.class);
-        HitTargetListener listener = (HitTargetListener) constructor.newInstance("aaa");
+        Constructor<?> constructor = tClass.getConstructor(String.class,String.class,String.class);
+        HitTargetListener listener = (HitTargetListener) constructor.newInstance("aaa","bbb","ccc");
         Assert.assertNotNull(listener);
     }
 
     @Test
     public void testCustomClassLoader() throws ClassNotFoundException {
-        Class<?> tClass = Class.forName("a.b.c.abc",true, new CustomClassLoader("D:\\abc.class",null));
+        //Class<?> tClass = Class.forName("a.b.c.abc",true, new CustomClassLoader("D:\\abc.class",null));
     }
 
+    @Test
+    public void testRegex(){
+        RegexUtil regexUtil = new RegexUtil("[1-9个十百千一二三四五六七八九]+");
+        System.out.printf(regexUtil.findTheFirst("第九百八十二章 十百千"));
+    }
+
+    @Test
+    public void testFindTitle() throws IOException {
+        Document document = Jsoup.connect("http://www.sanjiangge.com/book/47/47833/19586953.html").get();
+        System.out.println(document.select("div[id=content][name=content]").get(0).text());
+    }
 }

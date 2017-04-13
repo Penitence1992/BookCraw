@@ -9,7 +9,8 @@ public class ConfigBean {
     private String url;
     private String suffix;
     private String tagRex;
-
+    private String titleSelectQ;
+    private String textSelectQ;
     private int dep;
     private int threadCount;
 
@@ -18,6 +19,8 @@ public class ConfigBean {
         url = PropertiesUtil.getPropertyValue("url");
         suffix = PropertiesUtil.getPropertyValue("suffix");
         tagRex = PropertiesUtil.getPropertyValue("tagRex");
+        titleSelectQ = PropertiesUtil.getPropertyValue("titleSelectQ");
+        textSelectQ = PropertiesUtil.getPropertyValue("textSelectQ");
 
         dep = Integer.parseInt(PropertiesUtil.getPropertyValue("dep"));
         threadCount = Integer.parseInt(PropertiesUtil.getPropertyValue("threadCount"));
@@ -69,5 +72,25 @@ public class ConfigBean {
 
     public void setThreadCount(int threadCount) {
         this.threadCount = threadCount;
+    }
+
+    public ConfigBean(String titleSelectQ) {
+        this.titleSelectQ = titleSelectQ;
+    }
+
+    public String getTitleSelectQ() {
+        return titleSelectQ;
+    }
+
+    public void setTitleSelectQ(String titleSelectQ) {
+        this.titleSelectQ = titleSelectQ;
+    }
+
+    public String getTextSelectQ() {
+        return textSelectQ;
+    }
+
+    public void setTextSelectQ(String textSelectQ) {
+        this.textSelectQ = textSelectQ;
     }
 }

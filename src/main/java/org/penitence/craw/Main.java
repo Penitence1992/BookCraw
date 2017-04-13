@@ -3,7 +3,6 @@ package org.penitence.craw;
 import org.penitence.craw.config.ConfigBean;
 import org.penitence.craw.config.PropertiesUtil;
 import org.penitence.craw.event.HitTargetListener;
-import org.penitence.craw.event.impl.HigTarget;
 import org.penitence.craw.tools.Crawler;
 import org.penitence.craw.uitl.ReflectUtil;
 
@@ -37,6 +36,8 @@ public class Main {
 
     private static HitTargetListener getListener(ConfigBean bean){
         boolean isExternal = Boolean.parseBoolean(PropertiesUtil.getPropertyValue("external"));
+        Class[] classes = {String.class, String.class, String.class};
+        Object[] objects = {bean.getSavePath(), bean.getTitleSelectQ(), bean.getTextSelectQ()};
         if(isExternal){
             String classPath = PropertiesUtil.getPropertyValue("classPath");
             String externalClass = PropertiesUtil.getPropertyValue("externalClass");
@@ -44,11 +45,11 @@ public class Main {
                 throw new NullPointerException("args classPath and externalClass can't be null, Please use --classPath=xxx and --externalClass=xxx to import the ages");
             }
             System.out.println("user external class : " + externalClass + " to craw ");
-            return ReflectUtil.getClassByExternalClass(externalClass,classPath,new Class[]{String.class},new Object[]{bean.getSavePath()});
+            return ReflectUtil.getClassByExternalClass(externalClass,classPath, classes, objects);
         }else{
             System.out.println("user interior class : " + PropertiesUtil.getPropertyValue("crawClass") + " to craw");
             return ReflectUtil.getClassInstance(PropertiesUtil.getPropertyValue("crawClass"),
-                    new Class[]{String.class},new Object[]{bean.getSavePath()});
+                    classes, objects);
         }
     }
 }

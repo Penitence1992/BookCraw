@@ -36,7 +36,7 @@ public class Crawler {
     private String selectQ = "a[href]";
     private Pattern pattern ;
 
-    public Crawler(String suffix, String tagReg) {
+    public Crawler(String suffix, String tagReg ) {
         this.suffix = suffix;
         this.tagReg = tagReg;
     }
