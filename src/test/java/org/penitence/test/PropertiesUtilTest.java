@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,5 +67,12 @@ public class PropertiesUtilTest {
     public void testGetTitle(){
         String tmp = "****asdas<>?:adasd\"//\\asd**?asd:asdad|".replaceAll("[\\\\/*?:\"<>|]*","");
         System.out.println(tmp);
+    }
+
+    @Test
+    public void testQueue(){
+        ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>(Arrays.asList(1,2,3,4,5,6,7,8,9,10,11,12));
+        System.out.println(queue.poll());
+        System.out.println(queue.poll());
     }
 }

@@ -27,7 +27,7 @@ public class Main {
         ConfigBean bean = new ConfigBean();
         Crawler crawler = new Crawler(bean.getUrl(), bean.getSuffix(), bean.getTagRex());
         crawler.setCrawDepth(bean.getDep());
-        crawler.startMulitCraw(new HigTarget(bean.getSavePath()), bean.getThreadCount());
+        crawler.startMultipleThreadCraw(new HigTarget(bean.getSavePath()), bean.getThreadCount());
 
         //crawler.startCraw(System.out::println);
     }
