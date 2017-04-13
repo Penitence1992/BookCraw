@@ -2,28 +2,28 @@ package org.penitence.craw.thread;
 
 import org.penitence.craw.event.HitTargetListener;
 import org.penitence.craw.tools.Crawler;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.penitence.craw.tools.QueueUtil;
 
 /**
  * Created by RenJie on 2017/4/13 0013.
  */
 public class URLCrawThread implements Runnable {
 
-    private List<String> urls = new ArrayList<>();
     private HitTargetListener listener;
     private Crawler crawler;
-    public URLCrawThread(List<String> urls, HitTargetListener listener,final Crawler crawler) {
-        this.urls = urls;
+    private QueueUtil queueUtil;
+
+    public URLCrawThread(QueueUtil queueUtil, HitTargetListener listener, final Crawler crawler) {
         this.listener = listener;
         this.crawler = crawler;
+        this.queueUtil = queueUtil;
     }
 
     @Override
     public void run() {
-        urls.forEach(url -> {
+        String url;
+        while ( ( url = queueUtil.getOneNoBlock()) != null){
             crawler.startCraw(url,listener);
-        });
+        }
     }
 }

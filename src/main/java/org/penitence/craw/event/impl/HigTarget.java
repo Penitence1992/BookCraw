@@ -47,7 +47,7 @@ public class HigTarget implements HitTargetListener {
     }
 
     private String getTitleContent(String string){
-        String[] strings = string.split(" ");
+        String[] strings = string.split(SPLIT_STRING);
         return strings[strings.length - 1];
     }
 

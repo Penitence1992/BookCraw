@@ -2,8 +2,10 @@ package org.penitence.craw;
 
 import org.penitence.craw.config.ConfigBean;
 import org.penitence.craw.config.PropertiesUtil;
+import org.penitence.craw.event.HitTargetListener;
 import org.penitence.craw.event.impl.HigTarget;
 import org.penitence.craw.tools.Crawler;
+import org.penitence.craw.uitl.ReflectUtil;
 
 import java.io.IOException;
 
@@ -25,10 +27,28 @@ public class Main {
         *  参数6 线程数 --threadCount=8
         */
         ConfigBean bean = new ConfigBean();
+        HitTargetListener listener = getListener(bean);
         Crawler crawler = new Crawler(bean.getUrl(), bean.getSuffix(), bean.getTagRex());
         crawler.setCrawDepth(bean.getDep());
-        crawler.startMulitCraw(new HigTarget(bean.getSavePath()), bean.getThreadCount());
+        crawler.startMultipleThreadCraw(listener, bean.getThreadCount());
 
         //crawler.startCraw(System.out::println);
+    }
+
+    private static HitTargetListener getListener(ConfigBean bean){
+        boolean isExternal = Boolean.parseBoolean(PropertiesUtil.getPropertyValue("external"));
+        if(isExternal){
+            String classPath = PropertiesUtil.getPropertyValue("classPath");
+            String externalClass = PropertiesUtil.getPropertyValue("externalClass");
+            if(classPath == null || externalClass == null){
+                throw new NullPointerException("args classPath and externalClass can't be null, Please use --classPath=xxx and --externalClass=xxx to import the ages");
+            }
+            System.out.println("user external class : " + externalClass + " to craw ");
+            return ReflectUtil.getClassByExternalClass(externalClass,classPath,new Class[]{String.class},new Object[]{bean.getSavePath()});
+        }else{
+            System.out.println("user interior class : " + PropertiesUtil.getPropertyValue("crawClass") + " to craw");
+            return ReflectUtil.getClassInstance(PropertiesUtil.getPropertyValue("crawClass"),
+                    new Class[]{String.class},new Object[]{bean.getSavePath()});
+        }
     }
 }

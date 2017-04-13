@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -73,20 +74,14 @@ public class Crawler {
         basePath = getBasePath(url);
         doCraw(fillURL(url),0,listener);
     }
-    public void startMulitCraw(final HitTargetListener listener,final int threadCount) throws IOException {
-        List<Element> list = findElement(url,selectQ,suffix);
-        int groupCount = list.size() / threadCount;
-        int excessCount = list.size() % threadCount;
+    public void startMultipleThreadCraw(final HitTargetListener listener,final int threadCount) throws IOException {
+        List<String> list = findElement(url,selectQ,suffix).stream().
+                map(element -> fillURL(element.attr("href"))).
+                collect(Collectors.toList());
+
+        QueueUtil queueUtil = new QueueUtil(new ConcurrentLinkedQueue<>(list));
         for (int i = 0; i < threadCount; i ++ ){
-            int startIndex = i * groupCount;
-            int endIndex = (i + 1) * groupCount;
-            if( i == (threadCount - 1)){
-                endIndex += excessCount;
-            }
-            List<String> urls = list.subList(startIndex,endIndex ).stream().
-                    map(element -> fillURL(element.attr("href"))).
-                    collect(Collectors.toList());
-            new Thread(new URLCrawThread( urls,listener,this)).start();
+            new Thread(new URLCrawThread( queueUtil,listener,this)).start();
         }
     }
 
