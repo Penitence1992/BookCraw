@@ -24,8 +24,17 @@
 - crawClass
 > 使用哪个类进行爬取
 
-- titleSelectQ=div[class=bookname] > h1
-- textSelectQ=div[id=content][name=content]
+- titleSelectQ
+> 例如:div[class=bookname] > h1,详细请参考http://jsoup.org
+
+- textSelectQ
+> 例如:div[id=content][name=content],详细请参考http://jsoup.org
+
+- merge
+> true or false 是否合并
+
+- mergeName
+> 合并文件名称
 
 ## 如果使用外部类 则使用下面参数
 

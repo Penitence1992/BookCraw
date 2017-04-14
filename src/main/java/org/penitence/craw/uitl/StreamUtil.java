@@ -36,6 +36,35 @@ public class StreamUtil {
         }
     }
 
+    public static void mergeTextFileToDisk(File[] fileList,String outPath){
+        BufferedWriter bufferedWriter = null;
+        try {
+            File out = new File(outPath);
+            checkOrMakeDir(out.getParentFile());
+            bufferedWriter = new BufferedWriter(new FileWriter(out));
+            BufferedReader reader = null;
+            try {
+                for (File file : fileList){
+                    reader = new BufferedReader(new FileReader(file));
+                    String line;
+                    while( (line = reader.readLine()) != null ){
+                        bufferedWriter.write(line);
+                        bufferedWriter.flush();
+                    }
+                    reader.close();
+                }
+            }catch (IOException e){
+                e.printStackTrace();
+            }finally {
+                close(reader);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            close(bufferedWriter);
+        }
+    }
+
     public static void checkOrMakeDir(File dir){
         if(!dir.exists()) dir.mkdirs();
     }

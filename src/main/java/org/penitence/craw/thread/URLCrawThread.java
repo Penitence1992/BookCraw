@@ -1,5 +1,6 @@
 package org.penitence.craw.thread;
 
+import org.penitence.craw.bean.URLBean;
 import org.penitence.craw.event.HitTargetListener;
 import org.penitence.craw.tools.Crawler;
 import org.penitence.craw.tools.QueueUtil;
@@ -21,7 +22,7 @@ public class URLCrawThread implements Runnable {
 
     @Override
     public void run() {
-        String url;
+        URLBean url;
         while ( ( url = queueUtil.getOneNoBlock()) != null){
             crawler.startCraw(url,listener);
         }

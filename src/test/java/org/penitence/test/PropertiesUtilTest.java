@@ -3,12 +3,12 @@ package org.penitence.test;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.junit.Assert;
 import org.junit.Test;
 import org.penitence.craw.config.PropertiesUtil;
 import org.penitence.craw.event.HitTargetListener;
-import org.penitence.craw.uitl.CustomClassLoader;
+import org.penitence.craw.tools.QueueUtil;
+import org.penitence.craw.uitl.ConvertUtil;
 import org.penitence.craw.uitl.RegexUtil;
 
 import java.io.IOException;
@@ -18,8 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by RenJie on 2017/4/13 0013.
@@ -63,8 +63,49 @@ public class PropertiesUtilTest {
     }
 
     @Test
-    public void testFindTitle() throws IOException {
-        Document document = Jsoup.connect("http://www.sanjiangge.com/book/47/47833/19586953.html").get();
-        System.out.println(document.select("div[id=content][name=content]").get(0).text());
+    public void testFindTitle() throws IOException, InterruptedException {
+        ExecutorService pool = Executors.newFixedThreadPool(4);
+        for (int i = 0; i < 4; i ++){
+            pool.submit(() -> {
+                try {
+                    Thread.sleep(10000);
+                    System.out.println("线程完成");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        pool.shutdown();
+
+        while (!pool.isTerminated()){
+            System.out.println("没有完成");
+            Thread.sleep(1000);
+        }
+
+        System.out.println("完成");
     }
+
+    @Test
+    public void testNumConvert(){
+        String title = "二百零一";
+        Assert.assertEquals(ConvertUtil.chineseNumber2Int(title),201);
+    }
+
+    @Test
+    public void testQueueUtil(){
+        List<Integer> list = Arrays.asList(1,2,3,4,5,6,7,8,9,10);
+        ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>(list);
+        System.out.println(queue.size());
+        queue.poll();
+        System.out.println(queue.size());
+    }
+
+    @Test
+    public void testTTT() throws IOException {
+        Document document = Jsoup.connect("http://www.luoqiu.com/read/276121/43720338.html").get();
+        for (Element element : document.select("a[href]")){
+            System.out.println(element);
+        }
+    }
+
 }

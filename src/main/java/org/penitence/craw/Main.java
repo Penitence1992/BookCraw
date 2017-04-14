@@ -3,6 +3,7 @@ package org.penitence.craw;
 import org.penitence.craw.config.ConfigBean;
 import org.penitence.craw.config.PropertiesUtil;
 import org.penitence.craw.event.HitTargetListener;
+import org.penitence.craw.thread.MergeThread;
 import org.penitence.craw.tools.Crawler;
 import org.penitence.craw.uitl.ReflectUtil;
 
@@ -15,22 +16,16 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         PropertiesUtil.putStartArgs(args);
-        /*
-        *  预计6个参数
-        *  使用--xxx=xxx的方式进行设置
-        *  参数1 源URL --url=xx
-        *  参数2 后缀名 --suffix=xxx
-        *  参数3 目标格式使用正则 --tagReg=xxx
-        *  参数4 深度 --dep=1
-        *  参数5 保存路径 --save=xxx
-        *  参数6 线程数 --threadCount=8
-        */
+
         ConfigBean bean = new ConfigBean();
-        HitTargetListener listener = getListener(bean);
         Crawler crawler = new Crawler(bean.getUrl(), bean.getSuffix(), bean.getTagRex());
         crawler.setCrawDepth(bean.getDep());
-        crawler.startMultipleThreadCraw(listener, bean.getThreadCount());
+        crawler.startMultipleThreadCraw(getListener(bean), bean.getThreadCount());
 
+        boolean isMerge = Boolean.parseBoolean(PropertiesUtil.getPropertyValue("merge","false"));
+        if(isMerge){
+            new Thread(new MergeThread(bean.getSavePath(),PropertiesUtil.getPropertyValue("mergeName","merge.txt"),crawler)).start();
+        }
         //crawler.startCraw(System.out::println);
     }
 

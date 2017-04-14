@@ -5,8 +5,10 @@ import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.penitence.craw.bean.URLBean;
 import org.penitence.craw.event.HitTargetListener;
 import org.penitence.craw.thread.URLCrawThread;
+import org.penitence.craw.uitl.URLUtil;
 
 import java.io.IOException;
 import java.net.URL;
@@ -16,6 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -28,25 +32,32 @@ public class Crawler {
 
     private String url = "";
     private String suffix = "";
-    private String tagReg = "";
     private int dep = 3;
-    private String hostName = "";
-    private String basePath = "";
-    private String currentPath = "";
+    private String baseUrl = "";
+
     private String selectQ = "a[href]";
     private Pattern pattern ;
 
+    private ExecutorService pool;
+    private QueueUtil queueUtil;
+
     public Crawler(String suffix, String tagReg ) {
         this.suffix = suffix;
-        this.tagReg = tagReg;
+        pattern = Pattern.compile(tagReg);
     }
 
     public Crawler (String sUrl, String suffix, String tagReg){
         this.url = sUrl;
         this.suffix = StringUtil.isBlank(suffix) ? ".html" : suffix;
         pattern = Pattern.compile(tagReg);
-        hostName = getHostName();
-        basePath = getBasePath(sUrl);
+        if(!URLUtil.isFullUrl(url)){
+            throw new IllegalArgumentException("URL不是完整的URL,需要http://或者https://开头");
+        }
+        baseUrl = url;
+    }
+
+    public QueueUtil getQueueUtil() {
+        return queueUtil;
     }
 
     public void setCrawDepth(int dep){
@@ -70,71 +81,63 @@ public class Crawler {
     }
 
     public void startCraw(final String url, final HitTargetListener listener){
-        hostName = getHostName();
-        basePath = getBasePath(url);
-        doCraw(fillURL(url),0,listener);
+        checkAndCraw(url,0,listener);
+        //doCraw(fillURL(url),0,listener);
     }
+
+    public void startCraw(final URLBean bean, final HitTargetListener listener){
+        checkAndCraw(bean.getUrl(), bean.getCurrentDep(), listener);
+    }
+
+    public void startMultipleThreadCraw(final String url, final HitTargetListener listener, final  int threadCount ) throws IOException {
+        if(!URLUtil.isFullUrl(url)){
+            throw new IllegalArgumentException("URL不是完整的URL,需要http://或者https://开头");
+        }
+        baseUrl = url;
+        startMultipleThreadCraw(listener,threadCount);
+    }
+
     public void startMultipleThreadCraw(final HitTargetListener listener,final int threadCount) throws IOException {
-        List<String> list = findElement(url,selectQ,suffix).stream().
-                map(element -> fillURL(element.attr("href"))).
+        List<URLBean> list = findElement(url,selectQ,suffix).stream().
+                map(element -> new URLBean( URLUtil.fillNextUrl(baseUrl,element.attr("href")), 0) ).
                 collect(Collectors.toList());
 
-        QueueUtil queueUtil = new QueueUtil(new ConcurrentLinkedQueue<>(list));
+        queueUtil = new QueueUtil(new ConcurrentLinkedQueue<>(list));
+        pool = Executors.newFixedThreadPool(threadCount);
         for (int i = 0; i < threadCount; i ++ ){
-            new Thread(new URLCrawThread( queueUtil,listener,this)).start();
+            pool.execute(new URLCrawThread( queueUtil,listener,this));
         }
+        pool.shutdown();
+    }
+
+    public boolean isComplete(){
+        Optional<ExecutorService> optional = Optional.ofNullable(pool);
+        return optional.orElseThrow(NullPointerException::new).isTerminated();
+    }
+
+    private void checkAndCraw( final String url,final int curDep,final HitTargetListener listener) {
+        if(!isContinue(url,curDep)) return;
+        if(hitTag(url)){
+            triggerEvent(url, listener);
+        }
+        doCraw(url,curDep,listener);
     }
 
     private void doCraw(final String url, final int curDep, final HitTargetListener listener){
-        basePath = getBasePath(url);
-        if(doContinue(url,curDep)) return;
         try {
-            if(hitTag(url)){
-                doDispatcher(url, listener);
-            }
-            findElement(url,selectQ,suffix).forEach(element -> {
+            /*findElement(url,selectQ,suffix).forEach(element -> {
                 doCraw(fillURL(element.attr("href")),curDep + 1,listener);
-            });
+            });*/
+            List<URLBean> list = findElement(url,selectQ,suffix).stream().
+                    filter(element -> !crawCache.containsKey(element.attr("href"))).
+                    map(element -> new URLBean(URLUtil.fillNextUrl(url,element.attr("href")), curDep+1) ).
+                    collect(Collectors.toList());
+            queueUtil.put(list);
         } catch (IOException e) {
-            System.out.println(e.getMessage() + "; 重试");
+            System.out.println(e.getMessage() + " URL : " + url + "; 重试");
             doCraw(url,curDep + 1, listener);
         }
     }
-
-    private String getHostName(){
-        if(url.startsWith("http://")){
-            return splitHostName(url,7);
-        }else if (url.startsWith("https://")){
-            return splitHostName(url,8);
-        }else {
-            return url;
-        }
-    }
-
-    private String getBasePath(final String url){
-        if(url.startsWith("http://")){
-            return splitBasePath(url,7);
-        }else if (url.startsWith("https://")){
-            return splitBasePath(url,8);
-        }else {
-            return url;
-        }
-    }
-
-    private String splitHostName(final String url,final int count){
-        String tmp = url.substring(count);
-        return tmp.substring(0,tmp.indexOf("/"));
-    }
-
-    private String splitBasePath(final String url,final int count){
-        String tmp = url.substring(count);
-        return tmp.substring(0,tmp.lastIndexOf("/")); //www.a.com/abc/aaaa -> www.a.com/abc
-    }
-
-    private String rmParams(final String url){
-        return url.substring(0,url.indexOf("?")); // www.a.com/abc?a=b -> www.a.com/abc
-    }
-
 
     private List<Element> filterElements(final Elements elements,final String suffix){
         List<Element> list = new ArrayList<>();
@@ -147,12 +150,12 @@ public class Crawler {
         return list;
     }
 
-    private boolean doContinue(final String urls,final int curDep){
+    private boolean isContinue(final String urls,final int curDep){
         if(crawCache.containsKey(urls) || curDep > dep){
-           return true;
+           return false;
         }else{
             crawCache.put(urls,"a");
-            return false;
+            return true;
         }
     }
 
@@ -160,7 +163,7 @@ public class Crawler {
         return pattern.matcher(url).find();
     }
 
-    private void doDispatcher(final String url,final HitTargetListener listener){
+    private void triggerEvent(final String url,final HitTargetListener listener){
         Optional<HitTargetListener> optional = Optional.ofNullable(listener);
         optional.ifPresent(li -> li.hitTarget(url));
     }
@@ -175,12 +178,4 @@ public class Crawler {
         else return all/count + 1;
     }
 
-    private String fillURL(String url){
-        String tmp = "";
-        if (url.startsWith("http://") || url.startsWith("https://")) return url;
-        else if (url.startsWith("/"))   tmp = hostName + "/" + url;
-        else tmp = basePath + "/" + url;
-        if (!tmp.startsWith("http://")) return "http://" + tmp;
-        else return tmp;
-    }
 }
